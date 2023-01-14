@@ -3,11 +3,6 @@
     "description": "A wrapper for splitbrain/php-cli.",
     "type": "library",
     "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "aubreypwd\\PHP_CLI\\": "src/"
-        }
-    },
     "authors": [
         {
             "name": "Aubrey Portwood",
@@ -18,6 +13,9 @@
         "splitbrain/php-cli": "^1.2"
     },
     "autoload": {
+        "psr-4": {
+            "aubreypwd\\PHP_CLI\\": "src/"
+        },
         "files": [
             "autoload.php"
         ]
