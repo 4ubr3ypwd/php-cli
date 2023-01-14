@@ -16,5 +16,10 @@
     ],
     "require": {
         "splitbrain/php-cli": "^1.2"
+    },
+    "autoload": {
+        "files": [
+            "autoload.php"
+        ]
     }
 }
