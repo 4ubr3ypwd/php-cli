@@ -5,6 +5,14 @@ namespace aubreypwd\PHP_CLI;
 use \splitbrain\phpcli\Options;
 use \splitbrain\phpcli\Colors;
 
+/**
+ * CLI
+ *
+ * @TODO Methods to do colors easier
+ *     - ->log( )
+ *
+ * @since 1.0.0
+ */
 abstract class CLI extends \splitbrain\phpcli\CLI {
 
 	public $colors;
@@ -157,5 +165,61 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 					: substr( $base, 0, 1 )
 			);
 		}
+	}
+
+	/**
+	 * Log something out to console.
+	 *
+	 * This method is a bit of a hack to do things like:
+	 *
+	 *     $this->log( "A generic message to the console." );
+	 *
+	 * That way you can express something out without having to format
+	 * it using debug, info, warning, etc.
+	 *
+	 * But, if you want to use those designations (see parent::$logLevel),
+	 * you can by setting $level normally to a log level and using
+	 * $message instead.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  string   $level   If you set this to anything in
+	 *                           parent::$logLevel we'll use parent::logMessage()
+	 *                           and forward your $message to the console.
+	 *                           But if it is not, we will treat $level like the
+	 *                           message (ignoring $message) to ouput that to
+	 *                           the console.
+	 * @param  string   $message If you set $level to anything in
+	 *                           parent::$logLevel then we will treat $message as
+	 *                           the message and forward it along to
+	 *                           parent::logMessage().
+	 * @param  array    $context Conect (see parent::logMessage()).
+	 * @return void
+	 */
+	public function log( $level = '', $message = '', array $context = array() ) {
+
+		if ( in_array( $level, array_keys( $this->loglevel ), true ) ) {
+
+			// $level is set to something specific, use that.
+			$this->logMessage($level, $message, $context);
+
+			return;
+		}
+
+		// Just log out some text.
+		echo "{$level}\n";
+	}
+
+	/**
+	 * Log a line break.
+	 *
+	 * Just a quicker way to ouput a blank line.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @return void
+	 */
+	protected function lb( $return = false ) {
+		$this->log( '' );
 	}
 }
