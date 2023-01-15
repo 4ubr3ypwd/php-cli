@@ -15,10 +15,37 @@ use \splitbrain\phpcli\Colors;
  */
 abstract class CLI extends \splitbrain\phpcli\CLI {
 
+	/**
+	 * Colors
+	 *
+	 * @since 1.0.0
+	 *
+	 * @var \splitbrain\phpcli\Colors
+	 */
 	public $colors;
 
-	public $_options = [];
+	/**
+	 * Valid options.
+	 *
+	 * This is where we will store valid options so
+	 * invalidate_unexplained_options() can only flag options
+	 * not registered or explained.
+	 *
+	 * @see \aubreypwd\PHP_CLI\CLI::invalidate_unexplained_options() For more.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @var array
+	 */
+	public $valid_options = [];
 
+	/**
+	 * Construct
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
 	public function __construct() {
 
 		$this->colors = new Colors();
@@ -119,7 +146,7 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	protected function explain_option( Options $options, string $long, string $help, mixed $short = null, bool $needsarg = false, string $command = '' ) : void {
 		$options->registerOption( $long, $help, $short, $needsarg, $command );
 
-		$this->_options[ $long ] = $short;
+		$this->valid_options[ $long ] = $short;
 	}
 
 	protected function get_opt( Options $options, $option ) : bool|string {
@@ -148,11 +175,11 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 
 			$base = str_replace( array( '--', '-' ), '', $arg );
 
-			if ( in_array( $base, array_values( $this->_options ), true ) ) {
+			if ( in_array( $base, array_values( $this->valid_options ), true ) ) {
 				continue;
 			}
 
-			if ( in_array( $base, array_keys( $this->_options ), true ) ) {
+			if ( in_array( $base, array_keys( $this->valid_options ), true ) ) {
 				continue;
 			}
 
