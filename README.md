@@ -10,7 +10,9 @@ final class Command extends \aubreypwd\PHP_CLI\CLI {
 }
 ```
 
-Once you do this the command has access to a suite of useful methods:
+------------
+
+Once you do this the command has access to a suite of useful `protected` methods:
 
 # Methods
 
