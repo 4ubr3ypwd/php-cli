@@ -15,6 +15,9 @@ use \splitbrain\phpcli\Colors;
  */
 abstract class CLI extends \splitbrain\phpcli\CLI {
 
+	abstract protected function setup( Options $options );
+	abstract protected function main( Options $options );
+
 	/**
 	 * Colors
 	 *
@@ -53,9 +56,14 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 		parent::__construct();
 	}
 
-	abstract protected function setup( Options $options );
-	abstract protected function main( Options $options );
-
+	/**
+	 * Does the system have the command?
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  string   $command The command, e.g. `ls`.
+	 * @return bool
+	 */
 	protected function has_command( string $command ) : bool {
 
 		if ( empty( $command ) ) {
@@ -75,18 +83,47 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 		return basename( trim( $exec ) ) === $command;
 	}
 
+	/**
+	 * Get the running PHP version.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @return string
+	 */
 	protected function get_php_version() : string {
 		return $this->get_last_line( $this->safe_exec( "php -r 'echo phpversion() . \"\n\";' | sed 's/ *$//g'" ) );
 	}
 
+	/**
+	 * Get the working directory path.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @return string
+	 */
 	protected function get_working_dir() : string {
 		return $this->get_last_line( $this->safe_exec( 'pwd' ) );
 	}
 
+	/**
+	 * Get the working directory basename.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @return string
+	 */
 	protected function get_working_dirname() : string {
 		return $this->get_last_line( $this->safe_exec( 'echo "${PWD##*/}"' ) );
 	}
 
+	/**
+	 * Execute a system command (only if the command exists).
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  string   $command The command.
+	 * @return array             Data about the execution.
+	 */
 	private function safe_exec( string $command ) : array {
 
 		if ( ! $this->has_command( strtok( $command, ' ' ) ) ) {
@@ -105,6 +142,17 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 		];
 	}
 
+	/**
+	 * Get the output of safe_exec().
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  array    $result The result from safe_exec().
+	 * @param  string   $as     Set to `string` to get back a string with \n
+	 *                          line breaks. Defaults to `array` with an array
+	 *                          of lines of the output.
+	 * @return string|array     See $as.
+	 */
 	private function get_output( array $result, string $as = 'array' ) : string|array {
 
 		if ( 'array' !== $string && 'string' !== $as ) {
@@ -118,10 +166,27 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 		return 'array' === $as ? $array['output'] : implode( "\n", $output );
 	}
 
+	/**
+	 * Get the last line of safe_exec().
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  array    $exec Result of safe_exec().
+	 * @return string
+	 */
 	private function get_last_line( array $exec ) : string {
 		return isset( $exec['last_line'] ) ? trim( $exec['last_line'] ) : '';
 	}
 
+	/**
+	 * Get argument of position.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  Options  $options  Options.
+	 * @param  int      $position Position.
+	 * @return string             The value of the argument in that position.
+	 */
 	protected function get_arg( Options $options, int $position ) : string {
 
 		$args = $options->getArgs();
@@ -131,67 +196,103 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 			: '';
 	}
 
+	/**
+	 * Is an argument present (in any position)?
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  Options  $options Options.
+	 * @param  string   $arg     Argument name.
+	 * @return bool
+	 */
+	protected function arg_present( Options $options, string $arg ) : bool {
+		return in_array( $arg, $this->get_args( $options ), true );
+	}
+
+	/**
+	 * Get all the arguments.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  Options  $options Options.
+	 * @return array
+	 */
 	protected function get_args( Options $options ) : array {
 		return $options->getArgs();
 	}
 
+	/**
+	 * Explain/Register an argument.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  Options  $options  Options.
+	 * @param  string   $arg      The argument name.
+	 * @param  string   $help     The explanation of the argument.
+	 * @param  bool     $required Is the argument required?
+	 * @param  string   $command  Command
+	 * @return void
+	 */
 	protected function explain_argument( Options $options, string $arg, string $help, bool $required = true, string $command = '' ) : void {
 		$options->registerArgument( $arg, $help, $required, $command );
 	}
 
-	protected function set_help( Options $options, string $help ) : void {
+	/**
+	 * Set the description of the command.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param Options  $options Options.
+	 * @param string   $help    Description string.
+	 */
+	protected function set_desc( Options $options, string $help ) : void {
 		$options->setHelp( $help );
 	}
 
+	/**
+	 * Explain/Register an option.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  Options    $options  Options.
+	 * @param  string     $long     Long version.
+	 * @param  string     $help     Help contents.
+	 * @param  mixed|null $short    Short version (optional).
+	 * @param  bool       $needsarg Does it require an argument.
+	 * @param  string     $command  Command.
+	 * @return void
+	 */
 	protected function explain_option( Options $options, string $long, string $help, mixed $short = null, bool $needsarg = false, string $command = '' ) : void {
+
 		$options->registerOption( $long, $help, $short, $needsarg, $command );
 
 		$this->valid_options[ $long ] = $short;
 	}
 
+	/**
+	 * Get the value of an option of if an option is set.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  Options  $options Options.
+	 * @param  string   $option  Option.
+	 * @return bool|string True or false if it is or is not set.
+	 *                     String if it's set to a value, e.g. --flag=.
+	 */
 	protected function get_opt( Options $options, $option ) : bool|string {
 		return $options->getOpt( $option );
 	}
 
-	protected function show_help( Options $options ) {
+	/**
+	 * Show the help.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  Options  $options Options.
+	 * @return void
+	 */
+	protected function show_help( Options $options ) : void {
 		echo $options->help();
-	}
-
-	protected function invalidate_unexplained_options( Options $options ) {
-
-		foreach ( $_SERVER['argv'] as $position => $arg ) {
-
-			if ( 0 === intval( $position ) ) {
-				continue;
-			}
-
-			if ( '-' !== substr( $arg, 0, 1 ) ) {
-				continue;
-			}
-
-			if ( ! strstr( $arg, '-' ) ) {
-				continue;
-			}
-
-			$base = str_replace( array( '--', '-' ), '', $arg );
-
-			if ( in_array( $base, array_values( $this->valid_options ), true ) ) {
-				continue;
-			}
-
-			if ( in_array( $base, array_keys( $this->valid_options ), true ) ) {
-				continue;
-			}
-
-			$this->explain_option(
-				$options,
-				$base,
-				$this->colors->wrap( 'Invalid option.', $this->colors::C_RED ),
-				strstr( $arg, '--' )
-					? ''
-					: substr( $base, 0, 1 )
-			);
-		}
 	}
 
 	/**
@@ -234,7 +335,56 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 		}
 
 		// Just log out some text.
-		echo "{$level}\n";
+		echo $this->clog( "{$level}\n" );
+	}
+
+	/**
+	 * Colorize a message.
+	 *
+	 * @since  [-NEXT-]
+	 *
+	 * @param  string   $message The message with colors in HTML tags, e.g.
+	 *                           "This is <red>bad</red>".
+	 * @return string            Colorized message,
+	 */
+	public function clog( string $message ) : string {
+
+		foreach ( [
+			'reset',
+			'black',
+			'darkgray',
+			'blue',
+			'lightblue',
+			'green',
+			'lightgreen',
+			'cyan',
+			'lightcyan',
+			'red',
+			'lightred',
+			'purple',
+			'lightpurple',
+			'brown',
+			'yellow',
+			'lightgray',
+			'white',
+		] as $color ) {
+
+			$message = str_replace(
+				array(
+					"<$color>",
+					"</$color>",
+				),
+				array(
+					$this->colors->getColorCode( $color ),
+					$this->colors->getColorCode( 'reset' )
+				),
+				$message
+			);
+
+		}
+
+
+		return $message;
 	}
 
 	/**
