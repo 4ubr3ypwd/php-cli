@@ -39,3 +39,13 @@ $this->info( "The PHP version installed is: {$this->get_php_version()}" );
 ```
 
 This will return something like `7.4.0`.
+
+## `get_working_dirname() : string`
+
+This will give you back the directory (name) where the command was ran.
+
+```php
+$this->info( "The current dirname is: {$this->get_working_dirname()}" );
+```
+
+If you run this in `/my/great/directory` you will get back `directory`.
