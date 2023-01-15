@@ -10,9 +10,9 @@ final class Command extends \aubreypwd\PHP_CLI\CLI {
 }
 ```
 
-# Methods
-
 Once you do this the command has access to a suite of useful methods:
+
+# Methods
 
 ## `has_command( string $command ) : bool`
 
