@@ -5,8 +5,37 @@ Create a new class, e.g. per [php-cli/examples/complex.php](https://github.com/s
 ```php
 final class Command extends \aubreypwd\PHP_CLI\CLI {
 
-	protected function setup( \splitbrain\phpcli\Options $options ) {}
-	protected function main( \splitbrain\phpcli\Options $options ) {}
+	protected function setup( Options $options ) : void {
+
+		$this->set_help( $options, 'My cool command.' );
+
+		$this->explain_option( $options, 'version', 'Print version.', 'v' );
+
+		// Stops exceptions when using unexplained options.
+		$this->invalidate_unexplained_options( $options );
+	}
+
+	protected function main( Options $options ) : void {
+
+		if ( in_array( true, [
+			$this->version( $options ),
+		], true ) ) {
+			return;
+		}
+
+		$this->show_help( $options );
+	}
+
+	private function version( Options $options ) : bool {
+
+		if ( ! $this->get_opt( $options, 'version' ) ) {
+			return false;
+		}
+
+		$this->info( '1.0.0' );
+
+		return true;
+	}
 }
 ```
 
