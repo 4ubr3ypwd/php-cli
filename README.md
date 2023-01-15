@@ -25,3 +25,15 @@ $brew = $this->has_command( 'brew' );
 ```
 
 If the user has `brew` installed and accessable, you will get back `true`.
+
+## `get_php_version() : string`
+
+This will give you the current PHP version in use.
+
+### E.g.
+
+```php
+$this->info( "The PHP version installed is: {$this->get_php_version()}" );
+```
+
+This will return something like `7.4.0`.

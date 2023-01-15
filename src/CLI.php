@@ -11,6 +11,17 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 
 		$command = exec( "command -v {$command}", $result );
 
+		if ( ! is_array( $result ) ) {
+			return false;
+		}
+
 		return count( $result ) > 0;
+	}
+
+	protected function get_php_version() : string {
+
+		$command = exec( "php -r 'echo phpversion() . \"\n\";' | sed 's/ *$//g'", $result );
+
+		return is_string( $command ) ? $command : '';
 	}
 }
