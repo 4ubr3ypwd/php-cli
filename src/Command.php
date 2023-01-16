@@ -13,7 +13,7 @@ use \splitbrain\phpcli\Colors;
  *
  * @since 1.0.0
  */
-abstract class CLI extends \splitbrain\phpcli\CLI {
+abstract class Command extends \splitbrain\phpcli\CLI {
 
 	abstract protected function setup( Options $options );
 	abstract protected function main( Options $options );
