@@ -5,7 +5,7 @@ This is a CLI-tool I use to write command line tools using PHP. It's a wrapper f
 1. HTML-like tags for bullets, paragraphs, break-returns, and colorization
 2. A `log()` method that's more powerful than the built in info, error, etc methods from `splitbrain/php-cli`
 3. Tools like `has_command()`, `get_php_version()`, `rid()` (run in directory), etc
-4. Easier ways to run shell commands and extrapolate results including status, output (`array|string`), etc, with or without `stderr`
+4. Easier ways to run shell commands and extrapolate results including status, output (`array|string`), etc, with or without `stderr` (see `aubreypwd\PHP_CLI\Command::exec()`)
 
 ...and more.
 
