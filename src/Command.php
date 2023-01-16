@@ -42,6 +42,61 @@ abstract class Command extends \splitbrain\phpcli\CLI {
 	}
 
 	/**
+	 * Set the description of the command.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param Options  $options Options.
+	 * @param string   $help    Description string.
+	 */
+	protected function set_desc( Options $options, string $help ) : void {
+		$options->setHelp( $help );
+	}
+
+	/**
+	 * Log something out to console.
+	 *
+	 * This method is a bit of a hack to do things like:
+	 *
+	 *     $this->log( "A generic message to the console." );
+	 *
+	 * That way you can express something out without having to format
+	 * it using debug, info, warning, etc.
+	 *
+	 * But, if you want to use those designations (see parent::$logLevel),
+	 * you can by setting $level normally to a log level and using
+	 * $message instead.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  string   $level   If you set this to anything in
+	 *                           parent::$logLevel we'll use parent::logMessage()
+	 *                           and forward your $message to the console.
+	 *                           But if it is not, we will treat $level like the
+	 *                           message (ignoring $message) to ouput that to
+	 *                           the console.
+	 * @param  string   $message If you set $level to anything in
+	 *                           parent::$logLevel then we will treat $message as
+	 *                           the message and forward it along to
+	 *                           parent::logMessage().
+	 * @param  array    $context Conect (see parent::logMessage()).
+	 * @return void
+	 */
+	public function log( $level = '', $message = '', array $context = array() ) {
+
+		if ( in_array( $level, array_keys( $this->loglevel ), true ) ) {
+
+			// $level is set to something specific, use that.
+			$this->logMessage($level, $message, $context);
+
+			return;
+		}
+
+		// Just log out some text.
+		echo $this->parse_html( $this->colorize_message( "{$level}\n" ) );
+	}
+
+	/**
 	 * Does the system have the command?
 	 *
 	 * @since  1.0.0
@@ -66,39 +121,6 @@ abstract class Command extends \splitbrain\phpcli\CLI {
 		}
 
 		return basename( trim( $exec ) ) === $command;
-	}
-
-	/**
-	 * Get the running PHP version.
-	 *
-	 * @since  1.0.0
-	 *
-	 * @return string
-	 */
-	protected function get_php_version() : string {
-		return $this->exec_last_line( $this->exec( "php -r 'echo phpversion() . \"\n\";' | sed 's/ *$//g'" ) );
-	}
-
-	/**
-	 * Get the working directory path.
-	 *
-	 * @since  1.0.0
-	 *
-	 * @return string
-	 */
-	protected function get_working_dir() : string {
-		return $this->exec_last_line( $this->exec( 'pwd' ) );
-	}
-
-	/**
-	 * Get the working directory basename.
-	 *
-	 * @since  1.0.0
-	 *
-	 * @return string
-	 */
-	protected function get_working_dirname() : string {
-		return $this->exec_last_line( $this->exec( 'echo "${PWD##*/}"' ) );
 	}
 
 	/**
@@ -137,6 +159,31 @@ abstract class Command extends \splitbrain\phpcli\CLI {
 			'output'    => $output,
 			'code'      => intval( $code )
 		];
+	}
+
+	/**
+	 * Run a command in a directory.
+	 *
+	 * You will have to use exec_* tools here to extrapolate data.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  string   $command   The command.
+	 * @param  string   $directory The directory.
+	 * @param  bool     $quietly   Supress output.
+	 * @return array               Result data from aubreypwd\PHP_CLI\CLI::exec().
+	 */
+	protected function rid( string $command, string $directory, $quietly = false ) : string|array {
+
+		if ( ! file_exists( $directory ) ) {
+			throw new \Exception( "{$directory} doesn't exist." );
+		}
+
+		if ( empty( $command ) ) {
+			throw new \Exception( '$command is empty.' );
+		}
+
+		return $this->exec( "( cd '{$directory}' && {$command} )", $quietly, true );
 	}
 
 	/**
@@ -195,21 +242,19 @@ abstract class Command extends \splitbrain\phpcli\CLI {
 	}
 
 	/**
-	 * Get argument of position.
+	 * Explain/Register an argument.
 	 *
 	 * @since  1.0.0
 	 *
 	 * @param  Options  $options  Options.
-	 * @param  int      $position Position.
-	 * @return string             The value of the argument in that position.
+	 * @param  string   $arg      The argument name.
+	 * @param  string   $help     The explanation of the argument.
+	 * @param  bool     $required Is the argument required?
+	 * @param  string   $command  Command
+	 * @return void
 	 */
-	protected function get_arg( Options $options, int $position ) : string {
-
-		$args = $options->getArgs();
-
-		return isset( $args[ $position ] )
-			? $args[ $position ]
-			: '';
+	protected function explain_argument( Options $options, string $arg, string $help, bool $required = true, string $command = '' ) : void {
+		$options->registerArgument( $arg, $help, $required, $command );
 	}
 
 	/**
@@ -238,31 +283,21 @@ abstract class Command extends \splitbrain\phpcli\CLI {
 	}
 
 	/**
-	 * Explain/Register an argument.
+	 * Get argument of position.
 	 *
 	 * @since  1.0.0
 	 *
 	 * @param  Options  $options  Options.
-	 * @param  string   $arg      The argument name.
-	 * @param  string   $help     The explanation of the argument.
-	 * @param  bool     $required Is the argument required?
-	 * @param  string   $command  Command
-	 * @return void
+	 * @param  int      $position Position.
+	 * @return string             The value of the argument in that position.
 	 */
-	protected function explain_argument( Options $options, string $arg, string $help, bool $required = true, string $command = '' ) : void {
-		$options->registerArgument( $arg, $help, $required, $command );
-	}
+	protected function get_arg( Options $options, int $position ) : string {
 
-	/**
-	 * Set the description of the command.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param Options  $options Options.
-	 * @param string   $help    Description string.
-	 */
-	protected function set_desc( Options $options, string $help ) : void {
-		$options->setHelp( $help );
+		$args = $options->getArgs();
+
+		return isset( $args[ $position ] )
+			? $args[ $position ]
+			: '';
 	}
 
 	/**
@@ -309,49 +344,6 @@ abstract class Command extends \splitbrain\phpcli\CLI {
 	}
 
 	/**
-	 * Log something out to console.
-	 *
-	 * This method is a bit of a hack to do things like:
-	 *
-	 *     $this->log( "A generic message to the console." );
-	 *
-	 * That way you can express something out without having to format
-	 * it using debug, info, warning, etc.
-	 *
-	 * But, if you want to use those designations (see parent::$logLevel),
-	 * you can by setting $level normally to a log level and using
-	 * $message instead.
-	 *
-	 * @since  1.0.0
-	 *
-	 * @param  string   $level   If you set this to anything in
-	 *                           parent::$logLevel we'll use parent::logMessage()
-	 *                           and forward your $message to the console.
-	 *                           But if it is not, we will treat $level like the
-	 *                           message (ignoring $message) to ouput that to
-	 *                           the console.
-	 * @param  string   $message If you set $level to anything in
-	 *                           parent::$logLevel then we will treat $message as
-	 *                           the message and forward it along to
-	 *                           parent::logMessage().
-	 * @param  array    $context Conect (see parent::logMessage()).
-	 * @return void
-	 */
-	public function log( $level = '', $message = '', array $context = array() ) {
-
-		if ( in_array( $level, array_keys( $this->loglevel ), true ) ) {
-
-			// $level is set to something specific, use that.
-			$this->logMessage($level, $message, $context);
-
-			return;
-		}
-
-		// Just log out some text.
-		echo $this->parse_html( $this->clog( "{$level}\n" ) );
-	}
-
-	/**
 	 * Convert HTML.
 	 *
 	 * @since  1.0.0
@@ -389,7 +381,7 @@ abstract class Command extends \splitbrain\phpcli\CLI {
 	 *                           "This is <red>bad</red>".
 	 * @return string            Colorized message,
 	 */
-	public function clog( string $message ) : string {
+	protected function colorize_message( string $message ) : string {
 
 		foreach ( [
 			'reset',
@@ -430,27 +422,35 @@ abstract class Command extends \splitbrain\phpcli\CLI {
 	}
 
 	/**
-	 * Run a command in a directory.
-	 *
-	 * You will have to use exec_* tools here to extrapolate data.
+	 * Get the running PHP version.
 	 *
 	 * @since  1.0.0
 	 *
-	 * @param  string   $command   The command.
-	 * @param  string   $directory The directory.
-	 * @param  bool     $quietly   Supress output.
-	 * @return array               Result data from aubreypwd\PHP_CLI\CLI::exec().
+	 * @return string
 	 */
-	protected function rid( string $command, string $directory, $quietly = false ) : string|array {
+	protected function get_php_version() : string {
+		return $this->exec_last_line( $this->exec( "php -r 'echo phpversion() . \"\n\";' | sed 's/ *$//g'" ) );
+	}
 
-		if ( ! file_exists( $directory ) ) {
-			throw new \Exception( "{$directory} doesn't exist." );
-		}
+	/**
+	 * Get the working directory path.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @return string
+	 */
+	protected function get_working_dir() : string {
+		return $this->exec_last_line( $this->exec( 'pwd' ) );
+	}
 
-		if ( empty( $command ) ) {
-			throw new \Exception( '$command is empty.' );
-		}
-
-		return $this->exec( "( cd '{$directory}' && {$command} )", $quietly, true );
+	/**
+	 * Get the working directory basename.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @return string
+	 */
+	protected function get_working_dirname() : string {
+		return $this->exec_last_line( $this->exec( 'echo "${PWD##*/}"' ) );
 	}
 }
