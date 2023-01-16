@@ -104,6 +104,8 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	/**
 	 * Run a command.
 	 *
+	 * You will need to use exec_* tools here to extrapolate data.
+	 *
 	 * @since  1.0.0
 	 *
 	 * @param  string   $command The command.
@@ -148,7 +150,7 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	 *                          of lines of the output.
 	 * @return string|array     See $as.
 	 */
-	protected function exec_get_output( array $result, string $as = 'array' ) : string|array {
+	protected function exec_get_output( array $result, string $as = 'string' ) : string|array {
 
 		if ( 'array' !== $as && 'string' !== $as ) {
 			throw new \InvalidArgumentException( '$as must be set to array|string.' );
@@ -161,6 +163,14 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 		return 'array' === $as ? $result['output'] : implode( "\n", $result['output'] );
 	}
 
+	/**
+	 * Get the status of safe_exec().
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  array    $exec The data from safe_exec().
+	 * @return bool           True if no errors, false if there were.
+	 */
 	protected function exec_get_status( array $exec ) : bool {
 
 		if ( ! is_array( $exec ) || ! isset( $exec['code'] ) ) {
@@ -341,7 +351,15 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 		echo $this->parse_html( $this->clog( "{$level}\n" ) );
 	}
 
-	private function parse_html( $message ) {
+	/**
+	 * Convert HTML.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  string   $message The message which includes HTML.
+	 * @return string            The message with known HTML converted.
+	 */
+	protected function parse_html( $message ) {
 
 		return str_replace(
 			array(
@@ -411,6 +429,18 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 		return $message;
 	}
 
+	/**
+	 * Run a command in a directory.
+	 *
+	 * You will have to use exec_* tools here to extrapolate data.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  string   $command   The command.
+	 * @param  string   $directory The directory.
+	 * @param  bool     $quietly   Supress output.
+	 * @return array               Result data from safe_exec().
+	 */
 	protected function rid( string $command, string $directory, $quietly = false ) : string|array {
 
 		if ( ! file_exists( $directory ) ) {
