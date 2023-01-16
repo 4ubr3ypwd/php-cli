@@ -76,7 +76,7 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	 * @return string
 	 */
 	protected function get_php_version() : string {
-		return $this->exec_get_last_line( $this->safe_exec( "php -r 'echo phpversion() . \"\n\";' | sed 's/ *$//g'" ) );
+		return $this->exec_last_line( $this->exec( "php -r 'echo phpversion() . \"\n\";' | sed 's/ *$//g'" ) );
 	}
 
 	/**
@@ -87,7 +87,7 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	 * @return string
 	 */
 	protected function get_working_dir() : string {
-		return $this->exec_get_last_line( $this->safe_exec( 'pwd' ) );
+		return $this->exec_last_line( $this->exec( 'pwd' ) );
 	}
 
 	/**
@@ -98,7 +98,7 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	 * @return string
 	 */
 	protected function get_working_dirname() : string {
-		return $this->exec_get_last_line( $this->safe_exec( 'echo "${PWD##*/}"' ) );
+		return $this->exec_last_line( $this->exec( 'echo "${PWD##*/}"' ) );
 	}
 
 	/**
@@ -113,7 +113,7 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	 * @param  bool     $force   Force the run, even if we can't determine the command exists.
 	 * @return array             Data about the run.
 	 */
-	private function safe_exec( string $command, $quiet = false, $force = false, ) : array {
+	private function exec( string $command, $quiet = false, $force = false, ) : array {
 
 		if ( ! $force && ! $this->has_command( strtok( $command, ' ' ) ) ) {
 
@@ -140,11 +140,11 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	}
 
 	/**
-	 * Get the output of safe_exec().
+	 * Get the output of aubreypwd\PHP_CLI\CLI::exec().
 	 *
 	 * @since  1.0.0
 	 *
-	 * @param  array    $result The result from safe_exec().
+	 * @param  array    $result The result from aubreypwd\PHP_CLI\CLI::exec().
 	 * @param  string   $as     Set to `string` to get back a string with \n
 	 *                          line breaks. Defaults to `array` with an array
 	 *                          of lines of the output.
@@ -164,17 +164,17 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	}
 
 	/**
-	 * Get the status of safe_exec().
+	 * Get the status of aubreypwd\PHP_CLI\CLI::exec().
 	 *
 	 * @since  1.0.0
 	 *
-	 * @param  array    $exec The data from safe_exec().
+	 * @param  array    $exec The data from aubreypwd\PHP_CLI\CLI::exec().
 	 * @return bool           True if no errors, false if there were.
 	 */
 	protected function exec_get_status( array $exec ) : bool {
 
 		if ( ! is_array( $exec ) || ! isset( $exec['code'] ) ) {
-			throw new \Exception( 'We can only work with result from safe_exec().' );
+			throw new \Exception( 'We can only work with result from aubreypwd\PHP_CLI\CLI::exec().' );
 		}
 
 		return $exec['code'] === 0
@@ -183,14 +183,14 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	}
 
 	/**
-	 * Get the last line of safe_exec().
+	 * Get the last line of aubreypwd\PHP_CLI\CLI::exec().
 	 *
 	 * @since  1.0.0
 	 *
-	 * @param  array    $exec Result of safe_exec().
+	 * @param  array    $exec Result of aubreypwd\PHP_CLI\CLI::exec().
 	 * @return string
 	 */
-	private function exec_get_last_line( array $exec ) : string {
+	private function exec_last_line( array $exec ) : string {
 		return isset( $exec['last_line'] ) ? trim( $exec['last_line'] ) : '';
 	}
 
@@ -439,7 +439,7 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	 * @param  string   $command   The command.
 	 * @param  string   $directory The directory.
 	 * @param  bool     $quietly   Supress output.
-	 * @return array               Result data from safe_exec().
+	 * @return array               Result data from aubreypwd\PHP_CLI\CLI::exec().
 	 */
 	protected function rid( string $command, string $directory, $quietly = false ) : string|array {
 
@@ -451,6 +451,6 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 			throw new \Exception( '$command is empty.' );
 		}
 
-		return $this->safe_exec( "( cd '{$directory}' && {$command} )", $quietly, true );
+		return $this->exec( "( cd '{$directory}' && {$command} )", $quietly, true );
 	}
 }
