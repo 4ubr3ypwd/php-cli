@@ -15,3 +15,31 @@ The best way to familiarize yourself with what you can do see:
 - [aubreypwd/php-cli-dev](https://github.com/aubreypwd/php-cli-dev)
 
 The both should document and examplify use-cases until I build more tools with it.
+
+## Tips & Tricks
+
+### Avoid un-explained options from being thrown as Exceptions
+
+To avoid un-explained options from being thrown as `\Exception`'s run `::run()` with a `try/catch` like so:
+
+```php
+
+namespace aubreypwd\My_CLI;
+
+final class Command extends \aubreypwd\PHP_CLI\Command {
+	...
+}
+
+$cli = new \aubreypwd\My_CLI\Command();
+
+try {
+
+	$cli->run();
+
+} catch ( \Exception $e ) {
+
+	$cli->log( 'error', "{$e->getMessage()}\n" );
+}
+```
+
+`splitbrain/php-cli` shows an odd message when you try to use an option like `--option|-o` that has not been explained.
