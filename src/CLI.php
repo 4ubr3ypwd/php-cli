@@ -28,21 +28,6 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	public $colors;
 
 	/**
-	 * Valid options.
-	 *
-	 * This is where we will store valid options so
-	 * invalidate_unexplained_options() can only flag options
-	 * not registered or explained.
-	 *
-	 * @see \aubreypwd\PHP_CLI\CLI::invalidate_unexplained_options() For more.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @var array
-	 */
-	public $valid_options = [];
-
-	/**
 	 * Construct
 	 *
 	 * @since 1.0.0
@@ -117,28 +102,38 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	}
 
 	/**
-	 * Execute a system command (only if the command exists).
+	 * Run a command.
 	 *
 	 * @since  1.0.0
 	 *
 	 * @param  string   $command The command.
-	 * @return array             Data about the execution.
+	 * @param  bool     $quiet   Pipe into /dev/null to supress output (you will get no output info).
+	 * @param  bool     $force   Force the run, even if we can't determine the command exists.
+	 * @return array             Data about the run.
 	 */
-	private function safe_exec( string $command ) : array {
+	private function safe_exec( string $command, $quiet = false, $force = false, ) : array {
 
-		if ( ! $this->has_command( strtok( $command, ' ' ) ) ) {
+		if ( ! $force && ! $this->has_command( strtok( $command, ' ' ) ) ) {
 
 			return [
 				'last_line' => '',
 				'output'    => [],
+				'code'      => 1,
 			];
 		}
 
-		$last_line = exec( $command, $output );
+		$last_line = exec(
+			$quiet
+				? "{$command} &> /dev/null 2>&1" // Re-direct everything.
+				: "{$command} 2> /dev/null", // Just re-direct errors.
+			$output,
+			$code
+		);
 
 		return [
 			'last_line' => $last_line,
 			'output'    => $output,
+			'code'      => intval( $code )
 		];
 	}
 
@@ -153,17 +148,28 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	 *                          of lines of the output.
 	 * @return string|array     See $as.
 	 */
-	private function get_output( array $result, string $as = 'array' ) : string|array {
+	protected function exec_get_output( array $result, string $as = 'array' ) : string|array {
 
-		if ( 'array' !== $string && 'string' !== $as ) {
+		if ( 'array' !== $as && 'string' !== $as ) {
 			throw new \InvalidArgumentException( '$as must be set to array|string.' );
 		}
 
-		if ( ! isset( $array['output'] ) || ! is_array( $array['output'] ) ) {
+		if ( ! isset( $result['output'] ) || ! is_array( $result['output'] ) ) {
 			throw new \InvalidArgumentException( 'We can only work with an array from exec().' );
 		}
 
-		return 'array' === $as ? $array['output'] : implode( "\n", $output );
+		return 'array' === $as ? $result['output'] : implode( "\n", $result['output'] );
+	}
+
+	protected function exec_get_status( array $exec ) : bool {
+
+		if ( ! is_array( $exec ) || ! isset( $exec['code'] ) ) {
+			throw new \Exception( 'We can only work with result from safe_exec().' );
+		}
+
+		return $exec['code'] === 0
+			? true
+			: false;
 	}
 
 	/**
@@ -254,19 +260,16 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	 *
 	 * @since  1.0.0
 	 *
-	 * @param  Options    $options  Options.
-	 * @param  string     $long     Long version.
-	 * @param  string     $help     Help contents.
-	 * @param  mixed|null $short    Short version (optional).
-	 * @param  bool       $needsarg Does it require an argument.
-	 * @param  string     $command  Command.
+	 * @param  Options    $options     Options.
+	 * @param  string     $long        Long version.
+	 * @param  string     $help        Help contents.
+	 * @param  mixed|null $short       Short version (optional).
+	 * @param  bool       $explain_arg If it requires an argument, explain it here.
+	 * @param  string     $command     Command.
 	 * @return void
 	 */
-	protected function explain_option( Options $options, string $long, string $help, mixed $short = null, bool $needsarg = false, string $command = '' ) : void {
-
-		$options->registerOption( $long, $help, $short, $needsarg, $command );
-
-		$this->valid_options[ $long ] = $short;
+	protected function explain_option( Options $options, string $long, string $help, mixed $short = null, string $explain_arg = '', string $command = '' ) : void {
+		$options->registerOption( $long, $help, $short, empty( $explain_arg ) ? false : $explain_arg, $command );
 	}
 
 	/**
@@ -335,7 +338,28 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 		}
 
 		// Just log out some text.
-		echo $this->clog( "{$level}\n" );
+		echo $this->parse_html( $this->clog( "{$level}\n" ) );
+	}
+
+	private function parse_html( $message ) {
+
+		return str_replace(
+			array(
+				'<br>',
+				'<p>',
+				'</p>',
+				'<li>',
+				'</li>',
+			),
+			array(
+				"\n",
+				"\n",
+				"\n",
+				" • ",
+				""
+			),
+			$message
+		);
 	}
 
 	/**
@@ -387,16 +411,16 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 		return $message;
 	}
 
-	/**
-	 * Log a line break.
-	 *
-	 * Just a quicker way to ouput a blank line.
-	 *
-	 * @since  1.0.0
-	 *
-	 * @return void
-	 */
-	protected function lb( $return = false ) {
-		$this->log( '' );
+	protected function rid( string $command, string $directory, $quietly = false ) : string|array {
+
+		if ( ! file_exists( $directory ) ) {
+			throw new \Exception( "{$directory} doesn't exist." );
+		}
+
+		if ( empty( $command ) ) {
+			throw new \Exception( '$command is empty.' );
+		}
+
+		return $this->safe_exec( "( cd '{$directory}' && {$command} )", $quietly, true );
 	}
 }
