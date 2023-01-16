@@ -11,7 +11,7 @@ This is a CLI-tool I use to write command line tools using PHP. It's a wrapper f
 
 The best way to familiarize yourself with what you can do see:
 
-- [src/CLI.php](src/CLI.php)
+- [src/Command.php](src/Command.php)
 - [aubreypwd/php-cli-dev](https://github.com/aubreypwd/php-cli-dev)
 
 The both should document and examplify use-cases until I build more tools with it.
