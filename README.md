@@ -1,4 +1,4 @@
-# PHP_CLI
+# aubreypwd/php-cli
 
 This is a CLI-tool I use to write command line tools using PHP. It's a wrapper for [splitbrain/php-cli](https://github.com/splitbrain/php-cli) that adds some tools and improvements I enjoy having, like:
 
