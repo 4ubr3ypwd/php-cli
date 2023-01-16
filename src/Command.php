@@ -135,7 +135,7 @@ abstract class Command extends \splitbrain\phpcli\CLI {
 	 * @param  bool     $force   Force the run, even if we can't determine the command exists.
 	 * @return array             Data about the run.
 	 */
-	private function exec( string $command, $quiet = false, $force = false, ) : array {
+	protected function exec( string $command, $quiet = false, $force = false, ) : array {
 
 		if ( ! $force && ! $this->has_command( strtok( $command, ' ' ) ) ) {
 
@@ -159,31 +159,6 @@ abstract class Command extends \splitbrain\phpcli\CLI {
 			'output'    => $output,
 			'code'      => intval( $code )
 		];
-	}
-
-	/**
-	 * Run a command in a directory.
-	 *
-	 * You will have to use exec_* tools here to extrapolate data.
-	 *
-	 * @since  1.0.0
-	 *
-	 * @param  string   $command   The command.
-	 * @param  string   $directory The directory.
-	 * @param  bool     $quietly   Supress output.
-	 * @return array               Result data from aubreypwd\PHP_CLI\CLI::exec().
-	 */
-	protected function rid( string $command, string $directory, $quietly = false ) : string|array {
-
-		if ( ! file_exists( $directory ) ) {
-			throw new \Exception( "{$directory} doesn't exist." );
-		}
-
-		if ( empty( $command ) ) {
-			throw new \Exception( '$command is empty.' );
-		}
-
-		return $this->exec( "( cd '{$directory}' && {$command} )", $quietly, true );
 	}
 
 	/**
@@ -237,8 +212,33 @@ abstract class Command extends \splitbrain\phpcli\CLI {
 	 * @param  array    $exec Result of aubreypwd\PHP_CLI\CLI::exec().
 	 * @return string
 	 */
-	private function exec_last_line( array $exec ) : string {
+	protected function exec_last_line( array $exec ) : string {
 		return isset( $exec['last_line'] ) ? trim( $exec['last_line'] ) : '';
+	}
+
+	/**
+	 * Run a command in a directory.
+	 *
+	 * You will have to use exec_* tools here to extrapolate data.
+	 *
+	 * @since  1.0.0
+	 *
+	 * @param  string   $command   The command.
+	 * @param  string   $directory The directory.
+	 * @param  bool     $quietly   Supress output.
+	 * @return array               Result data from aubreypwd\PHP_CLI\CLI::exec().
+	 */
+	protected function rid( string $command, string $directory, $quietly = false ) : string|array {
+
+		if ( ! file_exists( $directory ) ) {
+			throw new \Exception( "{$directory} doesn't exist." );
+		}
+
+		if ( empty( $command ) ) {
+			throw new \Exception( '$command is empty.' );
+		}
+
+		return $this->exec( "( cd '{$directory}' && {$command} )", $quietly, true );
 	}
 
 	/**
