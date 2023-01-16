@@ -76,7 +76,7 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	 * @return string
 	 */
 	protected function get_php_version() : string {
-		return $this->get_last_line( $this->safe_exec( "php -r 'echo phpversion() . \"\n\";' | sed 's/ *$//g'" ) );
+		return $this->exec_get_last_line( $this->safe_exec( "php -r 'echo phpversion() . \"\n\";' | sed 's/ *$//g'" ) );
 	}
 
 	/**
@@ -87,7 +87,7 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	 * @return string
 	 */
 	protected function get_working_dir() : string {
-		return $this->get_last_line( $this->safe_exec( 'pwd' ) );
+		return $this->exec_get_last_line( $this->safe_exec( 'pwd' ) );
 	}
 
 	/**
@@ -98,7 +98,7 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	 * @return string
 	 */
 	protected function get_working_dirname() : string {
-		return $this->get_last_line( $this->safe_exec( 'echo "${PWD##*/}"' ) );
+		return $this->exec_get_last_line( $this->safe_exec( 'echo "${PWD##*/}"' ) );
 	}
 
 	/**
@@ -190,7 +190,7 @@ abstract class CLI extends \splitbrain\phpcli\CLI {
 	 * @param  array    $exec Result of safe_exec().
 	 * @return string
 	 */
-	private function get_last_line( array $exec ) : string {
+	private function exec_get_last_line( array $exec ) : string {
 		return isset( $exec['last_line'] ) ? trim( $exec['last_line'] ) : '';
 	}
 
