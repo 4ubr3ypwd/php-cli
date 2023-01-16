@@ -16,6 +16,12 @@ The best way to familiarize yourself with what you can do see:
 
 The both should document and examplify use-cases until I build more tools with it.
 
+## Installation
+
+```bash
+composer require aubreypwd/php-cli
+```
+
 ## Tips & Tricks
 
 ### Avoid un-explained options from being thrown as Exceptions
